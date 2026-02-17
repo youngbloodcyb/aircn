@@ -306,149 +306,149 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
         <>
             <div className="flex items-start">
                 <div className="overflow-hidden rounded-sm border">
-                <Table style={{ width: table.getCenterTotalSize(), tableLayout: "fixed" }}>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead
-                                        key={header.id}
-                                        className="relative group border-r last:border-r-0"
-                                        style={{ width: header.getSize() }}
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
-                                        {header.column.getCanResize() && (
-                                            <div
-                                                onDoubleClick={() => header.column.resetSize()}
-                                                onMouseDown={header.getResizeHandler()}
-                                                onTouchStart={header.getResizeHandler()}
-                                                className={`absolute top-0 right-0 h-full w-1 cursor-col-resize select-none touch-none opacity-0 group-hover:opacity-100 bg-border ${header.column.getIsResizing() ? "opacity-100 bg-primary" : ""
-                                                    }`}
-                                            />
-                                        )}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell
-                                            key={cell.id}
-                                            className="border-r last:border-r-0 hover:bg-muted/50 transition-colors p-1"
-                                            style={{ width: cell.column.getSize() }}
+                    <Table style={{ width: table.getCenterTotalSize(), tableLayout: "fixed" }}>
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead
+                                            key={header.id}
+                                            className="relative group border-r last:border-r-0"
+                                            style={{ width: header.getSize() }}
                                         >
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
+                                                )}
+                                            {header.column.getCanResize() && (
+                                                <div
+                                                    onDoubleClick={() => header.column.resetSize()}
+                                                    onMouseDown={header.getResizeHandler()}
+                                                    onTouchStart={header.getResizeHandler()}
+                                                    className={`absolute top-0 right-0 h-full w-1 cursor-col-resize select-none touch-none opacity-0 group-hover:opacity-100 bg-border ${header.column.getIsResizing() ? "opacity-100 bg-primary" : ""
+                                                        }`}
+                                                />
+                                            )}
+                                        </TableHead>
                                     ))}
-                                    <TableCell className="w-10" />
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={columns.length + 1} className="h-24 text-center">
-                                    No results.
+                            ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows?.length ? (
+                                table.getRowModel().rows.map((row) => (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && "selected"}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell
+                                                key={cell.id}
+                                                className="border-r last:border-r-0 hover:bg-muted/50 transition-colors p-1"
+                                                style={{ width: cell.column.getSize() }}
+                                            >
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
+                                        ))}
+                                        <TableCell className="w-10" />
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length + 1} className="h-24 text-center">
+                                        No results.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                        <tfoot>
+                            <TableRow className="border-t">
+                                <TableCell className="p-1">
+                                    <button
+                                        type="button"
+                                        onClick={handleAddRow}
+                                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-2"
+                                    >
+                                        <Plus className="size-3.5" />
+                                    </button>
                                 </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                    <tfoot>
-                        <TableRow className="border-t">
-                            <TableCell className="p-1">
-                                <button
-                                    type="button"
-                                    onClick={handleAddRow}
-                                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-1"
-                                >
-                                    <Plus className="size-3.5" />
-                                </button>
-                            </TableCell>
-                            {columnConfigs.map((config) => {
-                                const isVisible = columnVisibility[config.key] !== false
-                                if (!isVisible) return null
+                                {columnConfigs.map((config) => {
+                                    const isVisible = columnVisibility[config.key] !== false
+                                    if (!isVisible) return null
 
-                                if (config.type === "number" || config.type === "currency") {
-                                    const mode = aggregateModes[config.key] ?? "sum"
-                                    const values = rows
-                                        .map((r) => Number(r[config.key]))
-                                        .filter((v) => !isNaN(v))
-                                    const result = computeAggregate(values, mode)
+                                    if (config.type === "number" || config.type === "currency") {
+                                        const mode = aggregateModes[config.key] ?? "sum"
+                                        const values = rows
+                                            .map((r) => Number(r[config.key]))
+                                            .filter((v) => !isNaN(v))
+                                        const result = computeAggregate(values, mode)
+
+                                        return (
+                                            <TableCell
+                                                key={config.key}
+                                                className="border-r last:border-r-0 p-1"
+                                            >
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <button
+                                                            type="button"
+                                                            className="flex items-center gap-1 w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                                        >
+                                                            <span className="truncate">
+                                                                {AGGREGATE_LABELS[mode]}: {formatCellValue(result, config.type)}
+                                                            </span>
+                                                            <ChevronDown className="size-3 shrink-0" />
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="start">
+                                                        {(Object.keys(AGGREGATE_LABELS) as AggregateMode[]).map((m) => (
+                                                            <DropdownMenuItem
+                                                                key={m}
+                                                                onClick={() =>
+                                                                    setAggregateModes((prev) => ({
+                                                                        ...prev,
+                                                                        [config.key]: m,
+                                                                    }))
+                                                                }
+                                                            >
+                                                                {AGGREGATE_LABELS[m]}
+                                                            </DropdownMenuItem>
+                                                        ))}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        )
+                                    }
 
                                     return (
                                         <TableCell
                                             key={config.key}
                                             className="border-r last:border-r-0 p-1"
-                                        >
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <button
-                                                        type="button"
-                                                        className="flex items-center gap-1 w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                                    >
-                                                        <span className="truncate">
-                                                            {AGGREGATE_LABELS[mode]}: {formatCellValue(result, config.type)}
-                                                        </span>
-                                                        <ChevronDown className="size-3 shrink-0" />
-                                                    </button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="start">
-                                                    {(Object.keys(AGGREGATE_LABELS) as AggregateMode[]).map((m) => (
-                                                        <DropdownMenuItem
-                                                            key={m}
-                                                            onClick={() =>
-                                                                setAggregateModes((prev) => ({
-                                                                    ...prev,
-                                                                    [config.key]: m,
-                                                                }))
-                                                            }
-                                                        >
-                                                            {AGGREGATE_LABELS[m]}
-                                                        </DropdownMenuItem>
-                                                    ))}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                                        />
                                     )
-                                }
-
-                                return (
-                                    <TableCell
-                                        key={config.key}
-                                        className="border-r last:border-r-0 p-1"
-                                    />
-                                )
-                            })}
-                        </TableRow>
-                    </tfoot>
-                </Table>
-                {selectedCount > 0 && (
-                    <div className="flex items-center justify-between border-t px-3 py-1.5">
-                        <span className="text-sm text-muted-foreground">
-                            {selectedCount} of {totalCount} row(s) selected
-                        </span>
-                        <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={handleDeleteSelectedRows}
-                        >
-                            <Trash2 />
-                            Delete {selectedCount > 1 ? `${selectedCount} rows` : "row"}
-                        </Button>
-                    </div>
-                )}
+                                })}
+                            </TableRow>
+                        </tfoot>
+                    </Table>
+                    {selectedCount > 0 && (
+                        <div className="flex items-center justify-between border-t px-3 py-1.5">
+                            <span className="text-sm text-muted-foreground">
+                                {selectedCount} of {totalCount} row(s) selected
+                            </span>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={handleDeleteSelectedRows}
+                            >
+                                <Trash2 />
+                                Delete {selectedCount > 1 ? `${selectedCount} rows` : "row"}
+                            </Button>
+                        </div>
+                    )}
                 </div>
-                <div className="self-start p-1">
+                <div className="flex h-10 items-center mt-px ml-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon-xs">
