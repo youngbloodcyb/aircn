@@ -105,14 +105,14 @@ export const buildColumns = (
         return {
             accessorKey: config.key,
             header: () => (
-                <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                        <Icon className="size-3.5" />
-                        <span>{config.key}</span>
+                <div className="flex items-center justify-between gap-2 overflow-hidden">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <Icon className="size-3.5 shrink-0" />
+                        <span className="truncate">{config.key}</span>
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon-xs">
+                            <Button variant="ghost" size="icon-xs" className="shrink-0">
                                 <ChevronDown />
                                 <span className="sr-only">Column options for {config.key}</span>
                             </Button>
