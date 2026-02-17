@@ -9,7 +9,7 @@ import {
     type SortingState,
     type VisibilityState,
 } from "@tanstack/react-table"
-import { Plus } from "lucide-react"
+import { Plus, X } from "lucide-react"
 
 import {
     Table,
@@ -72,25 +72,33 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
     const [dialogInput, setDialogInput] = useState("")
     const [dialogType, setDialogType] = useState<ColumnType>("text")
+    const [dialogOptions, setDialogOptions] = useState<string[]>([])
+    const [newOptionValue, setNewOptionValue] = useState("")
 
     const columnKeys = useMemo(() => columnConfigs.map((c) => c.key), [columnConfigs])
 
-    const openDialog = useCallback((action: PendingAction) => {
+    const openDialog = useCallback((action: PendingAction, overrideType?: ColumnType) => {
         setPendingAction(action)
         if (action.type === "edit") {
             const config = columnConfigs.find((c) => c.key === action.key)
             setDialogInput(action.key)
             setDialogType(config?.type ?? "text")
+            setDialogOptions(config?.options ?? [])
         } else {
-            setDialogInput(COLUMN_TYPE_LABELS["text"])
-            setDialogType("text")
+            const type = overrideType ?? "text"
+            setDialogInput(COLUMN_TYPE_LABELS[type])
+            setDialogType(type)
+            setDialogOptions([])
         }
+        setNewOptionValue("")
     }, [columnConfigs])
 
     const closeDialog = useCallback(() => {
         setPendingAction(null)
         setDialogInput("")
         setDialogType("text")
+        setDialogOptions([])
+        setNewOptionValue("")
     }, [])
 
     const handleDialogSubmit = useCallback(() => {
@@ -105,7 +113,12 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
             setColumnConfigs((prev) =>
                 prev.map((c) => {
                     if (c.key !== oldKey) return c
-                    return { ...c, key: nameChanged ? name : c.key, type: dialogType }
+                    return {
+                        ...c,
+                        key: nameChanged ? name : c.key,
+                        type: dialogType,
+                        options: dialogType === "select" ? dialogOptions : undefined,
+                    }
                 })
             )
 
@@ -122,9 +135,13 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
         if (pendingAction.type === "insert") {
             if (columnKeys.includes(name)) return
 
-            const idx = columnKeys.indexOf(pendingAction.key)
-            const insertIdx = pendingAction.side === "left" ? idx : idx + 1
-            const newConfig: ColumnConfig = { key: name, type: dialogType }
+            const idx = pendingAction.key ? columnKeys.indexOf(pendingAction.key) : -1
+            const insertIdx = idx === -1 ? columnKeys.length : (pendingAction.side === "left" ? idx : idx + 1)
+            const newConfig: ColumnConfig = {
+                key: name,
+                type: dialogType,
+                options: dialogType === "select" ? dialogOptions : undefined,
+            }
 
             setColumnConfigs((prev) => [
                 ...prev.slice(0, insertIdx),
@@ -137,9 +154,20 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
         }
 
         closeDialog()
-    }, [dialogInput, dialogType, pendingAction, columnKeys, closeDialog])
+    }, [dialogInput, dialogType, dialogOptions, pendingAction, columnKeys, closeDialog])
 
     const handleQuickAdd = useCallback((type: ColumnType) => {
+        if (type === "select") {
+            const lastKey = columnKeys[columnKeys.length - 1]
+            openDialog(
+                lastKey
+                    ? { type: "insert", key: lastKey, side: "right" }
+                    : { type: "insert", key: "", side: "right" },
+                "select"
+            )
+            return
+        }
+
         let name = COLUMN_TYPE_LABELS[type]
         let i = 2
         while (columnKeys.includes(name)) {
@@ -152,7 +180,7 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
         setRows((prev) =>
             prev.map((row) => ({ ...row, [name]: getDefaultValue(type) }))
         )
-    }, [columnKeys])
+    }, [columnKeys, openDialog])
 
     const columnActions: ColumnActions = useMemo(
         () => ({
@@ -291,7 +319,7 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
-                                            className="border-r last:border-r-0 hover:bg-muted/50 transition-colors"
+                                            className="border-r last:border-r-0 hover:bg-muted/50 transition-colors p-1"
                                             style={{ width: cell.column.getSize() }}
                                         >
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -361,6 +389,62 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                 </SelectContent>
                             </Select>
                         </div>
+                        {dialogType === "select" && (
+                            <div className="flex flex-col gap-1.5">
+                                <Label>Options</Label>
+                                {dialogOptions.length > 0 && (
+                                    <div className="flex flex-col gap-1">
+                                        {dialogOptions.map((opt, i) => (
+                                            <div key={i} className="flex items-center gap-1.5">
+                                                <span className="text-sm flex-1 truncate">{opt}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon-xs"
+                                                    onClick={() =>
+                                                        setDialogOptions((prev) => prev.filter((_, j) => j !== i))
+                                                    }
+                                                >
+                                                    <X />
+                                                    <span className="sr-only">Remove {opt}</span>
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-1.5">
+                                    <Input
+                                        placeholder="New option"
+                                        value={newOptionValue}
+                                        onChange={(e) => setNewOptionValue(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault()
+                                                const v = newOptionValue.trim()
+                                                if (v && !dialogOptions.includes(v)) {
+                                                    setDialogOptions((prev) => [...prev, v])
+                                                    setNewOptionValue("")
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const v = newOptionValue.trim()
+                                            if (v && !dialogOptions.includes(v)) {
+                                                setDialogOptions((prev) => [...prev, v])
+                                                setNewOptionValue("")
+                                            }
+                                        }}
+                                    >
+                                        Add
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={closeDialog}>
                                 Cancel

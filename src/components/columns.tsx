@@ -29,8 +29,19 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Checkbox } from "@/components/ui/checkbox"
-import { type ColumnConfig, type ColumnType, formatCellValue, COLUMN_TYPE_LABELS } from "@/lib/column-types"
+import { type ColumnConfig, type ColumnType, COLUMN_TYPE_LABELS } from "@/lib/column-types"
+import {
+    TextCellEditor,
+    LongTextCellEditor,
+    CheckboxCellEditor,
+    SelectCellEditor,
+    DateCellEditor,
+    NumberCellEditor,
+    PhoneCellEditor,
+    EmailCellEditor,
+    CurrencyCellEditor,
+    PercentCellEditor,
+} from "@/components/cell-editors"
 
 export type Row = Record<string, unknown>
 
@@ -120,42 +131,42 @@ export const buildColumns = (
                 </div>
             ),
             meta: { type: config.type, options: config.options },
-            cell: ({ getValue, row: tableRow, table }) => {
+            cell: ({ getValue, row: tableRow }) => {
                 const value = getValue()
                 const rowIndex = tableRow.index
+                const handleChange = (v: unknown) =>
+                    actions.onCellChange(rowIndex, config.key, v)
 
-                if (config.type === "checkbox") {
-                    return (
-                        <Checkbox
-                            checked={Boolean(value)}
-                            onCheckedChange={(checked) =>
-                                actions.onCellChange(rowIndex, config.key, Boolean(checked))
-                            }
-                        />
-                    )
+                switch (config.type) {
+                    case "text":
+                        return <TextCellEditor value={value} onChange={handleChange} />
+                    case "long_text":
+                        return <LongTextCellEditor value={value} onChange={handleChange} />
+                    case "checkbox":
+                        return <CheckboxCellEditor value={value} onChange={handleChange} />
+                    case "select":
+                        return (
+                            <SelectCellEditor
+                                value={value}
+                                onChange={handleChange}
+                                options={config.options ?? []}
+                            />
+                        )
+                    case "date":
+                        return <DateCellEditor value={value} onChange={handleChange} />
+                    case "number":
+                        return <NumberCellEditor value={value} onChange={handleChange} />
+                    case "phone":
+                        return <PhoneCellEditor value={value} onChange={handleChange} />
+                    case "email":
+                        return <EmailCellEditor value={value} onChange={handleChange} />
+                    case "currency":
+                        return <CurrencyCellEditor value={value} onChange={handleChange} />
+                    case "percent":
+                        return <PercentCellEditor value={value} onChange={handleChange} />
+                    default:
+                        return <TextCellEditor value={value} onChange={handleChange} />
                 }
-
-                if (config.type === "select" && config.options) {
-                    return (
-                        <span className="text-sm">
-                            {value != null ? String(value) : ""}
-                        </span>
-                    )
-                }
-
-                if (config.type === "long_text") {
-                    return (
-                        <span className="text-sm line-clamp-2">
-                            {value != null ? String(value) : ""}
-                        </span>
-                    )
-                }
-
-                return (
-                    <span className="text-sm">
-                        {formatCellValue(value, config.type)}
-                    </span>
-                )
             },
         }
     })
