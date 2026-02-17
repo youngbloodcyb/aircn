@@ -365,11 +365,11 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                         </TableBody>
                         <tfoot>
                             <TableRow className="border-t">
-                                <TableCell className="p-1">
+                                <TableCell className="p-1 border-r">
                                     <button
                                         type="button"
                                         onClick={handleAddRow}
-                                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-2"
+                                        className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-2"
                                     >
                                         <Plus className="size-3.5" />
                                     </button>
@@ -394,10 +394,10 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                                     <DropdownMenuTrigger asChild>
                                                         <button
                                                             type="button"
-                                                            className="flex items-center gap-1 w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                                            className="flex items-center justify-between gap-1 w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer pr-2"
                                                         >
                                                             <span className="truncate">
-                                                                {AGGREGATE_LABELS[mode]}: {formatCellValue(result, config.type)}
+                                                                {AGGREGATE_LABELS[mode].toUpperCase()}: {formatCellValue(result, config.type)}
                                                             </span>
                                                             <ChevronDown className="size-3 shrink-0" />
                                                         </button>
