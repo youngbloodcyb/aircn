@@ -1,7 +1,7 @@
-import { columns, Payment } from "@/components/columns"
+import { type Row, initialColumns } from "@/components/columns"
 import { DataTable } from "@/components/data-table"
 
-async function getData(): Promise<Payment[]> {
+async function getData(): Promise<Row[]> {
   // Fetch data from your API here.
   return [
     {
@@ -10,7 +10,6 @@ async function getData(): Promise<Payment[]> {
       status: "pending",
       email: "m@example.com",
     },
-    // ...
   ]
 }
 
@@ -19,7 +18,7 @@ export default async function DemoPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <DataTable columns={columns} data={data} />
+      <DataTable initialColumns={initialColumns} data={data} />
     </div>
   )
 }
