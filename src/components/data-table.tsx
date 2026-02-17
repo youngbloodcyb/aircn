@@ -304,7 +304,7 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
 
     return (
         <>
-            <div className="overflow-hidden rounded-md border">
+            <div className="overflow-hidden rounded-sm border">
                 <Table style={{ width: table.getCenterTotalSize(), tableLayout: "fixed" }}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -471,7 +471,7 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                         </Button>
                     </div>
                 )}
-                
+
             </div>
 
             <Dialog open={pendingAction !== null} onOpenChange={(open) => { if (!open) closeDialog() }}>
