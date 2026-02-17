@@ -304,7 +304,8 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
 
     return (
         <>
-            <div className="overflow-hidden rounded-sm border">
+            <div className="flex items-start">
+                <div className="overflow-hidden rounded-sm border">
                 <Table style={{ width: table.getCenterTotalSize(), tableLayout: "fixed" }}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -332,30 +333,6 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                         )}
                                     </TableHead>
                                 ))}
-                                <TableHead className="w-10">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon-xs">
-                                                <Plus />
-                                                <span className="sr-only">Add column</span>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            {COLUMN_TYPES.map((t) => {
-                                                const Icon = typeIcons[t]
-                                                return (
-                                                    <DropdownMenuItem
-                                                        key={t}
-                                                        onClick={() => handleQuickAdd(t)}
-                                                    >
-                                                        <Icon />
-                                                        {COLUMN_TYPE_LABELS[t]}
-                                                    </DropdownMenuItem>
-                                                )
-                                            })}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableHead>
                             </TableRow>
                         ))}
                     </TableHeader>
@@ -452,7 +429,6 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                     />
                                 )
                             })}
-                            <TableCell className="w-10" />
                         </TableRow>
                     </tfoot>
                 </Table>
@@ -471,7 +447,31 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                         </Button>
                     </div>
                 )}
-
+                </div>
+                <div className="self-start p-1">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-xs">
+                                <Plus />
+                                <span className="sr-only">Add column</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {COLUMN_TYPES.map((t) => {
+                                const Icon = typeIcons[t]
+                                return (
+                                    <DropdownMenuItem
+                                        key={t}
+                                        onClick={() => handleQuickAdd(t)}
+                                    >
+                                        <Icon />
+                                        {COLUMN_TYPE_LABELS[t]}
+                                    </DropdownMenuItem>
+                                )
+                            })}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
             <Dialog open={pendingAction !== null} onOpenChange={(open) => { if (!open) closeDialog() }}>
