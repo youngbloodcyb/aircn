@@ -17,7 +17,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { formatCellValue } from "@/lib/column-types"
+import { formatCellValue, type SelectOption } from "@/lib/column-types"
+import { Badge } from "@/components/ui/badge"
 
 const cellInputClassName =
     "h-auto border-0 shadow-none rounded-none bg-transparent px-0 py-0 focus-visible:ring-0 focus-visible:border-0 text-sm"
@@ -52,11 +53,12 @@ export const CheckboxCellEditor = ({ value, onChange }: CellEditorProps) => (
 )
 
 interface SelectCellEditorProps extends CellEditorProps {
-    options: string[]
+    options: SelectOption[]
 }
 
 export const SelectCellEditor = ({ value, onChange, options }: SelectCellEditorProps) => {
     const stringValue = value != null && value !== "" ? String(value) : undefined
+    const selectedOption = options.find((o) => o.label === stringValue)
 
     if (options.length === 0) {
         return <span className="text-sm text-muted-foreground">No options configured</span>
@@ -67,13 +69,28 @@ export const SelectCellEditor = ({ value, onChange, options }: SelectCellEditorP
             value={stringValue}
             onValueChange={(v) => onChange(v)}
         >
-            <SelectTrigger className={`${cellInputClassName} w-full`}>
-                <SelectValue placeholder="Select..." />
+            <SelectTrigger className={`${cellInputClassName} w-full [&>span]:flex [&>span]:items-center`}>
+                {selectedOption ? (
+                    <Badge
+                        className="text-white border-0"
+                        style={{ backgroundColor: selectedOption.color }}
+                    >
+                        {selectedOption.label}
+                    </Badge>
+                ) : (
+                    <SelectValue placeholder="Select..." />
+                )}
             </SelectTrigger>
             <SelectContent position="popper">
                 {options.map((opt) => (
-                    <SelectItem key={opt} value={opt}>
-                        {opt}
+                    <SelectItem key={opt.label} value={opt.label}>
+                        <div className="flex items-center gap-2">
+                            <span
+                                className="size-2.5 rounded-full shrink-0"
+                                style={{ backgroundColor: opt.color }}
+                            />
+                            {opt.label}
+                        </div>
                     </SelectItem>
                 ))}
             </SelectContent>

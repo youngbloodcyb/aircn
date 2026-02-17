@@ -48,8 +48,10 @@ import { type Row, type ColumnActions, buildColumns, typeIcons } from "@/compone
 import {
     type ColumnConfig,
     type ColumnType,
+    type SelectOption,
     COLUMN_TYPES,
     COLUMN_TYPE_LABELS,
+    OPTION_COLORS,
     getDefaultValue,
     formatCellValue,
 } from "@/lib/column-types"
@@ -101,8 +103,9 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
     const [dialogInput, setDialogInput] = useState("")
     const [dialogType, setDialogType] = useState<ColumnType>("text")
-    const [dialogOptions, setDialogOptions] = useState<string[]>([])
+    const [dialogOptions, setDialogOptions] = useState<SelectOption[]>([])
     const [newOptionValue, setNewOptionValue] = useState("")
+    const [newOptionColor, setNewOptionColor] = useState<string>(OPTION_COLORS[0].value)
 
     const columnKeys = useMemo(() => columnConfigs.map((c) => c.key), [columnConfigs])
 
@@ -128,6 +131,7 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
         setDialogType("text")
         setDialogOptions([])
         setNewOptionValue("")
+        setNewOptionColor(OPTION_COLORS[0].value)
     }, [])
 
     const handleDialogSubmit = useCallback(() => {
@@ -531,7 +535,11 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                     <div className="flex flex-col gap-1">
                                         {dialogOptions.map((opt, i) => (
                                             <div key={i} className="flex items-center gap-1.5">
-                                                <span className="text-sm flex-1 truncate">{opt}</span>
+                                                <span
+                                                    className="size-3 rounded-full shrink-0"
+                                                    style={{ backgroundColor: opt.color }}
+                                                />
+                                                <span className="text-sm flex-1 truncate">{opt.label}</span>
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
@@ -541,13 +549,40 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                                     }
                                                 >
                                                     <X />
-                                                    <span className="sr-only">Remove {opt}</span>
+                                                    <span className="sr-only">Remove {opt.label}</span>
                                                 </Button>
                                             </div>
                                         ))}
                                     </div>
                                 )}
                                 <div className="flex items-center gap-1.5">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button
+                                                type="button"
+                                                className="size-8 rounded-md border flex items-center justify-center shrink-0"
+                                            >
+                                                <span
+                                                    className="size-4 rounded-full"
+                                                    style={{ backgroundColor: newOptionColor }}
+                                                />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                            <div className="grid grid-cols-5 gap-1 p-1">
+                                                {OPTION_COLORS.map((c) => (
+                                                    <button
+                                                        key={c.value}
+                                                        type="button"
+                                                        className="size-6 rounded-full ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                        style={{ backgroundColor: c.value }}
+                                                        title={c.name}
+                                                        onClick={() => setNewOptionColor(c.value)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                     <Input
                                         placeholder="New option"
                                         value={newOptionValue}
@@ -556,9 +591,10 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                             if (e.key === "Enter") {
                                                 e.preventDefault()
                                                 const v = newOptionValue.trim()
-                                                if (v && !dialogOptions.includes(v)) {
-                                                    setDialogOptions((prev) => [...prev, v])
+                                                if (v && !dialogOptions.some((o) => o.label === v)) {
+                                                    setDialogOptions((prev) => [...prev, { label: v, color: newOptionColor }])
                                                     setNewOptionValue("")
+                                                    setNewOptionColor(OPTION_COLORS[(dialogOptions.length + 1) % OPTION_COLORS.length].value)
                                                 }
                                             }
                                         }}
@@ -569,9 +605,10 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                         size="sm"
                                         onClick={() => {
                                             const v = newOptionValue.trim()
-                                            if (v && !dialogOptions.includes(v)) {
-                                                setDialogOptions((prev) => [...prev, v])
+                                            if (v && !dialogOptions.some((o) => o.label === v)) {
+                                                setDialogOptions((prev) => [...prev, { label: v, color: newOptionColor }])
                                                 setNewOptionValue("")
+                                                setNewOptionColor(OPTION_COLORS[(dialogOptions.length + 1) % OPTION_COLORS.length].value)
                                             }
                                         }}
                                     >
