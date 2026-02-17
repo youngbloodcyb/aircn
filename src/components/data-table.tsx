@@ -10,7 +10,7 @@ import {
     type VisibilityState,
     type RowSelectionState,
 } from "@tanstack/react-table"
-import { Plus, Trash2, X } from "lucide-react"
+import { ChevronDown, Plus, Trash2, X } from "lucide-react"
 
 import {
     Table,
@@ -21,10 +21,10 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import {
-    DropdownMenu as AddDropdownMenu,
-    DropdownMenuContent as AddDropdownMenuContent,
-    DropdownMenuItem as AddDropdownMenuItem,
-    DropdownMenuTrigger as AddDropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
     Dialog,
@@ -51,6 +51,7 @@ import {
     COLUMN_TYPES,
     COLUMN_TYPE_LABELS,
     getDefaultValue,
+    formatCellValue,
 } from "@/lib/column-types"
 
 interface DataTableProps {
@@ -62,12 +63,38 @@ type PendingAction =
     | { type: "edit"; key: string }
     | { type: "insert"; key: string; side: "left" | "right" }
 
+type AggregateMode = "sum" | "average" | "median"
+
+const AGGREGATE_LABELS: Record<AggregateMode, string> = {
+    sum: "Sum",
+    average: "Average",
+    median: "Median",
+}
+
+const computeAggregate = (values: number[], mode: AggregateMode): number => {
+    if (values.length === 0) return 0
+    switch (mode) {
+        case "sum":
+            return values.reduce((a, b) => a + b, 0)
+        case "average":
+            return values.reduce((a, b) => a + b, 0) / values.length
+        case "median": {
+            const sorted = [...values].sort((a, b) => a - b)
+            const mid = Math.floor(sorted.length / 2)
+            return sorted.length % 2 !== 0
+                ? sorted[mid]
+                : (sorted[mid - 1] + sorted[mid]) / 2
+        }
+    }
+}
+
 export const DataTable = ({ initialColumns, data }: DataTableProps) => {
     const [columnConfigs, setColumnConfigs] = useState<ColumnConfig[]>(initialColumns)
     const [rows, setRows] = useState<Row[]>(data)
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+    const [aggregateModes, setAggregateModes] = useState<Record<string, AggregateMode>>({})
 
 
 
@@ -306,28 +333,28 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                                     </TableHead>
                                 ))}
                                 <TableHead className="w-10">
-                                    <AddDropdownMenu>
-                                        <AddDropdownMenuTrigger asChild>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon-xs">
                                                 <Plus />
                                                 <span className="sr-only">Add column</span>
                                             </Button>
-                                        </AddDropdownMenuTrigger>
-                                        <AddDropdownMenuContent align="end">
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
                                             {COLUMN_TYPES.map((t) => {
                                                 const Icon = typeIcons[t]
                                                 return (
-                                                    <AddDropdownMenuItem
+                                                    <DropdownMenuItem
                                                         key={t}
                                                         onClick={() => handleQuickAdd(t)}
                                                     >
                                                         <Icon />
                                                         {COLUMN_TYPE_LABELS[t]}
-                                                    </AddDropdownMenuItem>
+                                                    </DropdownMenuItem>
                                                 )
                                             })}
-                                        </AddDropdownMenuContent>
-                                    </AddDropdownMenu>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </TableHead>
                             </TableRow>
                         ))}
@@ -359,6 +386,75 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                             </TableRow>
                         )}
                     </TableBody>
+                    <tfoot>
+                        <TableRow className="border-t">
+                            <TableCell className="p-1">
+                                <button
+                                    type="button"
+                                    onClick={handleAddRow}
+                                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-1"
+                                >
+                                    <Plus className="size-3.5" />
+                                </button>
+                            </TableCell>
+                            {columnConfigs.map((config) => {
+                                const isVisible = columnVisibility[config.key] !== false
+                                if (!isVisible) return null
+
+                                if (config.type === "number" || config.type === "currency") {
+                                    const mode = aggregateModes[config.key] ?? "sum"
+                                    const values = rows
+                                        .map((r) => Number(r[config.key]))
+                                        .filter((v) => !isNaN(v))
+                                    const result = computeAggregate(values, mode)
+
+                                    return (
+                                        <TableCell
+                                            key={config.key}
+                                            className="border-r last:border-r-0 p-1"
+                                        >
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <button
+                                                        type="button"
+                                                        className="flex items-center gap-1 w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                                    >
+                                                        <span className="truncate">
+                                                            {AGGREGATE_LABELS[mode]}: {formatCellValue(result, config.type)}
+                                                        </span>
+                                                        <ChevronDown className="size-3 shrink-0" />
+                                                    </button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="start">
+                                                    {(Object.keys(AGGREGATE_LABELS) as AggregateMode[]).map((m) => (
+                                                        <DropdownMenuItem
+                                                            key={m}
+                                                            onClick={() =>
+                                                                setAggregateModes((prev) => ({
+                                                                    ...prev,
+                                                                    [config.key]: m,
+                                                                }))
+                                                            }
+                                                        >
+                                                            {AGGREGATE_LABELS[m]}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    )
+                                }
+
+                                return (
+                                    <TableCell
+                                        key={config.key}
+                                        className="border-r last:border-r-0 p-1"
+                                    />
+                                )
+                            })}
+                            <TableCell className="w-10" />
+                        </TableRow>
+                    </tfoot>
                 </Table>
                 {selectedCount > 0 && (
                     <div className="flex items-center justify-between border-t px-3 py-1.5">
@@ -375,14 +471,7 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                         </Button>
                     </div>
                 )}
-                <button
-                    type="button"
-                    onClick={handleAddRow}
-                    className="flex w-full items-center gap-1.5 border-t px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted/50 transition-colors cursor-pointer"
-                >
-                    <Plus className="size-3.5" />
-                    Add row
-                </button>
+                
             </div>
 
             <Dialog open={pendingAction !== null} onOpenChange={(open) => { if (!open) closeDialog() }}>
