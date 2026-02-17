@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -129,14 +129,38 @@ export const DateCellEditor = ({ value, onChange }: CellEditorProps) => {
     )
 }
 
-export const NumberCellEditor = ({ value, onChange }: CellEditorProps) => (
-    <Input
-        className={cellInputClassName}
-        type="number"
-        value={value != null ? String(value) : ""}
-        onChange={(e) => onChange(e.target.value)}
-    />
-)
+export const NumberCellEditor = ({ value, onChange }: CellEditorProps) => {
+    const [focused, setFocused] = useState(false)
+    const raw = value != null ? String(value) : ""
+
+    const formatNumber = useCallback((v: string) => {
+        if (v === "" || v === "-") return v
+        const num = Number(v)
+        if (isNaN(num)) return v
+        return num.toLocaleString("en-US", { maximumFractionDigits: 2 })
+    }, [])
+
+    const handleChange = (input: string) => {
+        const cleaned = input.replace(/,/g, "")
+        if (cleaned === "" || cleaned === "-") {
+            onChange(cleaned)
+            return
+        }
+        const match = cleaned.match(/^-?\d*\.?\d{0,2}$/)
+        if (match) onChange(cleaned)
+    }
+
+    return (
+        <Input
+            className={cellInputClassName}
+            inputMode="decimal"
+            value={focused ? raw : formatNumber(raw)}
+            onChange={(e) => handleChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+        />
+    )
+}
 
 export const PhoneCellEditor = ({ value, onChange }: CellEditorProps) => {
     const formatPhone = (raw: string): string => {
@@ -172,18 +196,41 @@ export const EmailCellEditor = ({ value, onChange }: CellEditorProps) => (
     />
 )
 
-export const CurrencyCellEditor = ({ value, onChange }: CellEditorProps) => (
-    <div className="flex items-center gap-0.5">
-        <span className="text-sm text-muted-foreground">$</span>
-        <Input
-            className={cellInputClassName}
-            type="number"
-            step="0.01"
-            value={value != null ? String(value) : ""}
-            onChange={(e) => onChange(e.target.value)}
-        />
-    </div>
-)
+export const CurrencyCellEditor = ({ value, onChange }: CellEditorProps) => {
+    const [focused, setFocused] = useState(false)
+    const raw = value != null ? String(value) : ""
+
+    const formatNumber = useCallback((v: string) => {
+        if (v === "" || v === "-") return v
+        const num = Number(v)
+        if (isNaN(num)) return v
+        return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    }, [])
+
+    const handleChange = (input: string) => {
+        const cleaned = input.replace(/,/g, "")
+        if (cleaned === "" || cleaned === "-") {
+            onChange(cleaned)
+            return
+        }
+        const match = cleaned.match(/^-?\d*\.?\d{0,2}$/)
+        if (match) onChange(cleaned)
+    }
+
+    return (
+        <div className="flex items-center gap-0.5">
+            <span className="text-sm text-muted-foreground">$</span>
+            <Input
+                className={cellInputClassName}
+                inputMode="decimal"
+                value={focused ? raw : formatNumber(raw)}
+                onChange={(e) => handleChange(e.target.value)}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+            />
+        </div>
+    )
+}
 
 export const PercentCellEditor = ({ value, onChange }: CellEditorProps) => (
     <div className="flex items-center gap-0.5">
