@@ -8,8 +8,9 @@ import {
     useReactTable,
     type SortingState,
     type VisibilityState,
+    type RowSelectionState,
 } from "@tanstack/react-table"
-import { Plus, X } from "lucide-react"
+import { Plus, Trash2, X } from "lucide-react"
 
 import {
     Table,
@@ -66,6 +67,7 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
     const [rows, setRows] = useState<Row[]>(data)
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
 
 
@@ -241,14 +243,35 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
     const table = useReactTable({
         data: rows,
         columns,
-        state: { sorting, columnVisibility },
+        state: { sorting, columnVisibility, rowSelection },
+        getRowId: (row) => String(row.id ?? ""),
         onSortingChange: setSorting,
         onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         columnResizeMode: "onChange",
         enableColumnResizing: true,
     })
+
+    const handleAddRow = useCallback(() => {
+        const emptyRow: Row = { id: crypto.randomUUID() }
+        for (const config of columnConfigs) {
+            emptyRow[config.key] = getDefaultValue(config.type)
+        }
+        setRows((prev) => [...prev, emptyRow])
+    }, [columnConfigs])
+
+    const handleDeleteSelectedRows = useCallback(() => {
+        const selectedIds = new Set(
+            table.getFilteredSelectedRowModel().rows.map((r) => r.id)
+        )
+        setRows((prev) => prev.filter((row) => !selectedIds.has(String(row.id ?? ""))))
+        setRowSelection({})
+    }, [table])
+
+    const selectedCount = table.getFilteredSelectedRowModel().rows.length
+    const totalCount = table.getFilteredRowModel().rows.length
 
     const dialogTitle = pendingAction?.type === "edit" ? "Edit column" : "New column"
 
@@ -337,6 +360,29 @@ export const DataTable = ({ initialColumns, data }: DataTableProps) => {
                         )}
                     </TableBody>
                 </Table>
+                {selectedCount > 0 && (
+                    <div className="flex items-center justify-between border-t px-3 py-1.5">
+                        <span className="text-sm text-muted-foreground">
+                            {selectedCount} of {totalCount} row(s) selected
+                        </span>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleDeleteSelectedRows}
+                        >
+                            <Trash2 />
+                            Delete {selectedCount > 1 ? `${selectedCount} rows` : "row"}
+                        </Button>
+                    </div>
+                )}
+                <button
+                    type="button"
+                    onClick={handleAddRow}
+                    className="flex w-full items-center gap-1.5 border-t px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+                >
+                    <Plus className="size-3.5" />
+                    Add row
+                </button>
             </div>
 
             <Dialog open={pendingAction !== null} onOpenChange={(open) => { if (!open) closeDialog() }}>

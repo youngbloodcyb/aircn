@@ -29,6 +29,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Checkbox } from "@/components/ui/checkbox"
 import { type ColumnConfig, type ColumnType, COLUMN_TYPE_LABELS } from "@/lib/column-types"
 import {
     TextCellEditor,
@@ -73,7 +74,32 @@ export const buildColumns = (
     columnConfigs: ColumnConfig[],
     actions: ColumnActions
 ): ColumnDef<Row>[] => {
-    return columnConfigs.map((config) => {
+    const selectColumn: ColumnDef<Row> = {
+        id: "select",
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected() ||
+                    (table.getIsSomePageRowsSelected() && "indeterminate")
+                }
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        enableResizing: false,
+        size: 40,
+    }
+
+    const dataColumns: ColumnDef<Row>[] = columnConfigs.map((config) => {
         const Icon = typeIcons[config.type]
 
         return {
@@ -170,6 +196,8 @@ export const buildColumns = (
             },
         }
     })
+
+    return [selectColumn, ...dataColumns]
 }
 
 export const initialColumns: ColumnConfig[] = [
